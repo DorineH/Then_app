@@ -1,0 +1,30 @@
+{
+    "name": "Then",
+    "short_name": "Then",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#C8A1E0",
+    "orientation": "portrait",
+    "icons": [
+      {
+        "src": "/icons/icon-128x128.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      },
+      {
+        "src": "/icons/icon-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshots/screenshot1.png",
+            "sizes": "749x1126",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ]
+  }
+  

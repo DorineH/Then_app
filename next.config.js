@@ -13,6 +13,10 @@ const nextConfig = {
   experimental: {
     serverActions: {},
   },
+  i18n: {
+    locales: ['fr', 'en'],
+    defaultLocale: 'fr'
+  }
 };
 
 module.exports = withPWA(nextConfig);

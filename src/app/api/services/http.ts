@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { loginDemo } from './authService'
 
 export const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE ?? '/api',
@@ -17,8 +18,15 @@ export const setToken = (token: string) => {
   }
 }
 
-axiosInstance.interceptors.request.use((config) => {
-  const token = getToken()
+axiosInstance.interceptors.request.use(async (config) => {
+  let token = getToken()
+  if (!token && process.env.NODE_ENV !== 'production') {
+    try {
+      token = await loginDemo() // récupère un token de démo
+    } catch (e) {
+      console.warn('Auto login demo failed', e)
+    }
+  }
   if (token) {
     config.headers = config.headers ?? {}
     config.headers.Authorization = `Bearer ${token}`

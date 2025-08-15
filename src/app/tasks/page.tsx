@@ -92,16 +92,6 @@ export default function Page() {
   return (
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
-        <AppBar position="sticky" elevation={0} color="transparent">
-          <Toolbar>
-            <Typography variant="h6" sx={{ flex: 1 }}>
-              THEN<span style={{ opacity: 0.5 }}>.</span>
-            </Typography>
-            <IconButton>
-              <CalendarMonthIcon />
-            </IconButton>
-          </Toolbar>
-        </AppBar>
 
         <Container maxWidth="sm" sx={{ pb: 8 }}>
           <Paper

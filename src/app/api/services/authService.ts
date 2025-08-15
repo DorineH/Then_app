@@ -1,4 +1,5 @@
-import { axiosInstance, getToken, setToken } from './http'
+import axios from 'axios'
+import { getToken, setToken } from './http'
 
 export type DemoLoginPayload = { userId?: string; coupleId?: string; email?: string }
 export type DemoLoginResponse = {
@@ -9,7 +10,7 @@ export type DemoLoginResponse = {
 }
 
 export async function loginDemo(): Promise<string> {
-  const { data } = await axiosInstance.post('/auth/demo', {}) // @Public côté Nest
+  const { data } = await axios.post((process.env.NEXT_PUBLIC_API_BASE ?? '/api') + '/auth/demo', {}) // @Public côté Nest
   const token = data?.access_token
   if (!token) throw new Error('No token received')
   setToken(token)
@@ -24,4 +25,16 @@ export async function ensureToken(): Promise<string> {
   }
   return await loginDemo()
 }
-
+// export async function bootstrapToken(): Promise<string> {
+//   let token = getToken()
+//   if (!token) {
+//     const { data } = await axiosInstance.post('/auth/demo', {}) // public
+//     token = data?.access_token
+//     if (!token) throw new Error('No token received')
+//     setToken(token)
+//   } else {
+//     // s’assure que l’instance axios a bien l’en-tête
+//     setToken(token)
+//   }
+//   return token
+// }

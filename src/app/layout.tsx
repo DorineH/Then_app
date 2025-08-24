@@ -11,6 +11,8 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
 })
+import BottomNavigation from '@/components/BottomNavigation'
+import ToastProvider from './providers/toast-provider'
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -29,6 +31,9 @@ export default function RootLayout({
       <link rel="apple-touch-icon" href="/icons/icon-128x128.png" />
 
       <body className={`${geistSans.variable} ${geistMono.variable}`}>{children}</body>
+      {/* Barre de navigation fixe */}
+      <ToastProvider />
+      <BottomNavigation />
     </html>
   )
 }

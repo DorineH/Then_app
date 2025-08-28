@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
-import { Home, PawPrint, Heart, User, Plus } from 'lucide-react'
+import { Home, PawPrint, Heart, User, Plus, ClipboardCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const BottomNavigation = () => {
@@ -24,7 +24,7 @@ const BottomNavigation = () => {
     {
       icon: Plus,
       label: 'Ajouter',
-      path: '/add',
+      path: '/emotions',
       id: 'create'
     },
     {
@@ -34,10 +34,10 @@ const BottomNavigation = () => {
       id: 'favorites'
     },
     {
-      icon: User,
-      label: 'Profil',
-      path: '/profile',
-      id: 'profile'
+      icon: ClipboardCheck,
+      label: 'To-Do',
+      path: '/tasks',
+      id: 'tasks'
     }
   ]
 

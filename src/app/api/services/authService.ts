@@ -25,14 +25,3 @@ export async function ensureToken(): Promise<string> {
   return await loginDemo()
 }
 
-export type Claims = { userId: string; coupleId: string; email: string; iat?: number; exp?: number }
-export function decodeClaims(): Claims | null {
-  try {
-    const t = getToken()
-    if (!t) return null
-    const payload = JSON.parse(atob(t.split('.')[1]))
-    return payload
-  } catch {
-    return null
-  }
-}

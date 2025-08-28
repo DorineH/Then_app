@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Geist, Geist_Mono } from 'next/font/google'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -12,6 +13,7 @@ const geistMono = Geist_Mono({
 })
 import BottomNavigation from '@/components/BottomNavigation'
 import ToastProvider from './providers/toast-provider'
+import AuthProvider from './providers/auth-provider'
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -25,13 +27,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-        {/* Container principal avec padding bottom pour la nav */}
-        <main className="pb-16 min-h-screen">{children}</main>
+      {/* Container principal avec padding bottom pour la nav */}
+      {/* <main className="pb-16 min-h-screen">{children}</main> */}
 
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>{children}</body>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <AuthProvider>{children}</AuthProvider>
+        <ToastProvider />
+        <BottomNavigation />
+      </body>
       {/* Barre de navigation fixe */}
-      <ToastProvider />
-      <BottomNavigation />
     </html>
   )
 }

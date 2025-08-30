@@ -137,14 +137,6 @@ const FavoritesPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8 pb-24 md:pb-16">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 md:mb-8 gap-3 flex-wrap">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg sm:text-xl font-bold">THEN .</h1>
-          </div>
-          <Moon className="w-6 h-6" />
-        </div>
-
         {/* Title */}
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 md:mb-8">Favoris</h2>
 

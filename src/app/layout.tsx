@@ -13,7 +13,8 @@ const geistMono = Geist_Mono({
 })
 import BottomNavigation from '@/components/BottomNavigation'
 import ToastProvider from './providers/toast-provider'
-import AuthProvider from './providers/auth-provider'
+import Header from '@/components/Header'
+// import AuthProvider from './providers/auth-provider'
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -31,7 +32,13 @@ export default function RootLayout({
       {/* <main className="pb-16 min-h-screen">{children}</main> */}
 
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <AuthProvider>{children}</AuthProvider>
+        {/* <AuthProvider>
+          {children}
+          <ToastProvider />
+          <BottomNavigation />
+        </AuthProvider> */}
+        <Header />
+        {children}
         <ToastProvider />
         <BottomNavigation />
       </body>

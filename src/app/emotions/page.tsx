@@ -49,12 +49,6 @@ const DashboardCouple = () => {
   }, [])
 
   const handleSubmitEmotion = async (emoji: string, message?: string) => {
-    // try {
-    //   await ServiceEmotions.addEmotion({ emoji, optionalMessage: message });
-    //   fetchData();
-    // } catch (err) {
-    //   console.error(err);
-    // }
     try {
       await ServiceEmotions.addEmotion({ emoji, optionalMessage: message })
       // Recharger après envoi
@@ -64,7 +58,7 @@ const DashboardCouple = () => {
         ServiceEmotions.getLastEmotionPerUser(),
       ])
       setEmotions(current || [])
-      setLastUserEmotion((last || []) as any)
+      setLastUserEmotion((last && last[0]) || null)
     } catch (e) {
       console.error('Erreur add émotion:', e)
     } finally {
@@ -83,10 +77,6 @@ const DashboardCouple = () => {
   return (
     <Box p={{ xs: 1, sm: 2 }} maxWidth="sm" mx="auto" pb={{ xs: 10, sm: 4 }}>
       {/* Bandeau “en ce moment” */}
-      <Typography variant="h5" align="center" mb={2} fontWeight="bold" color="primary">
-        Partage d’émotion
-      </Typography>
-
       <Box
         display="flex"
         flexDirection="row"

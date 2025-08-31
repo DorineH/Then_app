@@ -10,10 +10,20 @@ export interface Task {
   time?: string // HH:mm
   category: Category
   done: boolean
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface TaskResponse {
+  createdAt: string | Date
+  updatedAt: string | Date
+  id: string
+  userId: string
+  coupleId: string
+  title: string
+  description: string | undefined
+  date: string
+  time: string | undefined
+  done: boolean
   tasks: Task[]
 }

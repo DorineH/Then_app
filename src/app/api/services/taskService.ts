@@ -12,15 +12,21 @@ export type CreateTaskInput = Pick<
 export type UpdateTaskInput = Partial<CreateTaskInput>
 
 const ServiceTasks = {
-  async getTasks(date: string): Promise<TaskResponse[]> {
+  async getTasksByMonth(year: number, month: number) {
     try {
-      console.log(date)
-      const response = await axiosInstance.get<TaskResponse[]>(`/tasks`, { params: { date } })
-      //   if (typeof response.data === 'string') {
-      //     throw new Error('Réponse HTML reçue — la baseURL pointe vers Next, pas Nest.')
-      //   }
+      const response = await axiosInstance.get<Task[]>(`/tasks/month`, {
+        params: { year, month },
+      })
+      return response.data || []
+    } catch (error) {
+      console.error('Error getting tasks by month:', error)
+      throw error
+    }
+  },
+  async getTasks(date: string): Promise<Task[]> {
+    try {
+      const response = await axiosInstance.get<Task[]>(`/tasks`, { params: { date } })
       return Array.isArray(response.data) ? response.data : []
-      //   return response.data || []
     } catch (error) {
       console.error('Error get tasks:', error)
       throw error

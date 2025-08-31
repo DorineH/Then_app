@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import EmojiPicker, { EmojiClickData } from 'emoji-picker-react'
+import EmojiPicker, { Categories, EmojiClickData, EmojiStyle } from 'emoji-picker-react'
 import {
   Button,
   TextField,
@@ -60,32 +60,94 @@ export const EmojiEmotionPicker = ({ onSubmit }: Props) => {
         Ajouter une émotion +
       </Button>
 
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Choisis ton émotion</DialogTitle>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            m: { xs: 0, sm: 4 },
+            width: { xs: '100vw', sm: 'auto' },
+            height: { xs: '100vh', sm: 'auto' },
+            maxWidth: { xs: '100vw', sm: 600 },
+            maxHeight: { xs: '100vh', sm: '90vh' },
+            borderRadius: { xs: 0, sm: 3 },
+            p: { xs: 0, sm: 2 },
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            px: { xs: 2, sm: 3 },
+            pt: { xs: 2, sm: 3 },
+            pb: { xs: 1, sm: 2 },
+            fontSize: { xs: 22, sm: 26 },
+            textAlign: 'center',
+          }}
+        >
+          Choisis ton émotion
+        </DialogTitle>
 
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2}>
-            <EmojiPicker onEmojiClick={handleEmojiClick} />
-
-            {selectedEmoji && (
-              <Typography variant="h5" align="center">
-                Emoji choisi : {selectedEmoji}
-              </Typography>
-            )}
-
-            <TextField
-              label="Message (optionnel)"
-              fullWidth
-              multiline
-              rows={2}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Une pensée, un mot doux..."
+        <DialogContent
+          sx={{
+            flex: 1,
+            px: { xs: 1, sm: 3 },
+            py: { xs: 1, sm: 2 },
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            overflowY: 'auto',
+          }}
+        >
+          {selectedEmoji && (
+            <Typography variant="h5" align="center" sx={{ mt: 1 }}>
+              Tu es d&apos;humeur : {selectedEmoji}
+            </Typography>
+          )}
+          <TextField
+            label="Un Message pour détailler (optionnel)"
+            fullWidth
+            multiline
+            rows={2}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Une pensée, un mot doux..."
+            sx={{ mt: 1 }}
+          />
+          <Box sx={{ width: '100%', maxWidth: 420, mx: 'auto' }}>
+            <EmojiPicker
+              onEmojiClick={handleEmojiClick}
+              width="100%"
+              style={{ width: '100%', height: '350px' }}
+              emojiStyle={EmojiStyle.NATIVE}
+              categories={[
+                { category: Categories.SMILEYS_PEOPLE, name: 'Personnes' },
+                { category: Categories.ACTIVITIES, name: 'Activité' },
+                { category: Categories.ANIMALS_NATURE, name: 'Nature' },
+                { category: Categories.TRAVEL_PLACES, name: 'Lieux' },
+              ]}
+              reactionsDefaultOpen={true}
+              lazyLoadEmojis
+              emojiVersion="1.0"
+              searchPlaceholder="Rechercher un emoji..."
+              previewConfig={{
+                showPreview: false,
+              }}
             />
           </Box>
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions
+          sx={{
+            px: { xs: 2, sm: 3 },
+            pb: { xs: 2, sm: 3 },
+            pt: { xs: 1, sm: 2 },
+            justifyContent: 'center',
+          }}
+        >
           <Button onClick={() => setOpen(false)}>Annuler</Button>
           <Button variant="contained" disabled={!selectedEmoji} onClick={handleSend}>
             Envoyer

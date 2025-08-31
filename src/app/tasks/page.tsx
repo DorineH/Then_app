@@ -3,8 +3,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { ThemeProvider } from '@mui/material/styles'
 import {
-  AppBar,
-  Toolbar,
   IconButton,
   Typography,
   Container,
@@ -13,9 +11,7 @@ import {
   Stack,
   CircularProgress,
   Fab,
-  useMediaQuery,
 } from '@mui/material'
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import AddIcon from '@mui/icons-material/Add'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -24,7 +20,7 @@ import { appTheme } from '@/lib/theme'
 import AddTaskDialog from '@/components/AddTaskDialog'
 import TaskItem from '@/components/TaskItem'
 import MonthHeader from '@/components/MonthHeader'
-import MonthGrid from '@/components/MonthGrrid'
+import MonthGrid from '@/components/MonthGrid'
 import ServiceTasks from '../api/services/taskService'
 import { Task } from '@/interfaces/tasks/Tasks'
 import { Dayjs } from 'dayjs'
@@ -34,30 +30,71 @@ const toISODate = (d: Dayjs) => dayjs(d).format('YYYY-MM-DD')
 
 export default function Page() {
   const theme = useMemo(() => appTheme, [])
-  const isSmall = useMediaQuery('(max-width:480px)')
 
   const [month, setMonth] = useState(dayjs())
   const [selected, setSelected] = useState<string>(toISODate(dayjs()))
   const [addOpen, setAddOpen] = useState(false)
 
   const [tasks, setTasks] = useState<Task[] | []>([])
+  const [tasksByDate, setTasksByDate] = useState<{
+    [date: string]: { mine?: boolean; partner?: boolean }
+  }>({})
+  // const [tasksByDate, setTasksByDate] = useState<TasksByDate>({})
+
   console.log('Tasks state:', tasks)
   const [isLoading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  // type TasksByDate = { [date: string]: { mine?: boolean; partner?: boolean } }
 
   const load = async (dateISO: string) => {
     setLoading(true)
     setError(null)
     try {
-      console.log('Loading tasks for', dateISO)
       const data = await ServiceTasks.getTasks(dateISO)
-      console.log('Tasks loaded for', dateISO, ':', data)
       setTasks(data as unknown as Task[])
-    } catch (e) {
-      console.error('Error loading tasks:', e)
-      setError('Impossible de charger les tâches.')
+    } catch {
+      setError('Erreur lors du chargement des tâches.')
+      setLoading(false)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Récupère l'userId depuis le token JWT
+  type JwtPayload = {
+    userId?: string
+    sub?: string
+    [key: string]: unknown
+  }
+
+  const getUserId = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('then_token') : null
+    if (!token) return null
+    try {
+      const decoded: JwtPayload = JSON.parse(atob(token.split('.')[1]))
+      return decoded.userId || decoded.sub || null
+    } catch {
+      return null
+    }
+  }
+
+  const loadMonthTasks = async (month: Dayjs) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const year = month.year()
+      const monthNum = month.month() + 1 // JS: janvier=0, API: janvier=1
+      const data = await ServiceTasks.getTasksByMonth(year, monthNum)
+      const userId = getUserId()
+      const byDate: { [date: string]: { mine?: boolean; partner?: boolean } } = {}
+      data.forEach((task) => {
+        if (!byDate[task.date]) byDate[task.date] = {}
+        if (userId && task.userId === userId) byDate[task.date].mine = true
+        else byDate[task.date].partner = true
+      })
+      setTasksByDate(byDate)
+    } catch {
+      setError('Impossible de charger les tâches du mois.')
     }
   }
 
@@ -82,8 +119,51 @@ export default function Page() {
     }
   }, [selected])
 
-  const onPrev = () => setMonth((m) => m.subtract(1, 'month'))
-  const onNext = () => setMonth((m) => m.add(1, 'month'))
+  const handleTaskCreated = (dateISO: string, newTask: Task) => {
+    if (dateISO === selected) {
+      setTasks((prev) => [...prev, newTask])
+    }
+    setTasksByDate((prev) => ({
+      ...prev,
+      [dateISO]: {
+        ...(prev[dateISO] || {}),
+        mine: true,
+      },
+    }))
+  }
+  useEffect(() => {
+    loadMonthTasks(month)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [month])
+
+  const today = dayjs()
+  const isCurrentMonth = (m: dayjs.Dayjs) =>
+    m.year() === today.year() && m.month() === today.month()
+
+  const onPrev = () => {
+    setMonth((m) => {
+      const newMonth = m.subtract(1, 'month')
+      if (isCurrentMonth(newMonth)) {
+        setSelected(toISODate(today))
+      } else {
+        setSelected(toISODate(newMonth.startOf('month')))
+      }
+      return newMonth
+    })
+  }
+
+  const onNext = () => {
+    setMonth((m) => {
+      const newMonth = m.add(1, 'month')
+      if (isCurrentMonth(newMonth)) {
+        setSelected(toISODate(today))
+      } else {
+        setSelected(toISODate(newMonth.startOf('month')))
+      }
+      return newMonth
+    })
+  }
+
   const onSelect = (d: dayjs.Dayjs) => {
     setSelected(toISODate(d))
     setMonth(dayjs(d))
@@ -92,20 +172,54 @@ export default function Page() {
   return (
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
-
-        <Container maxWidth="sm" sx={{ pb: 8 }}>
+        <Container maxWidth="sm" sx={{ pb: { xs: 13, sm: 8 } }}>
           <Paper
             elevation={0}
             sx={{ mt: 1, p: 1, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}
           >
             <MonthHeader current={month} onPrev={onPrev} onNext={onNext} />
-            <MonthGrid month={month} selected={selected} onSelect={onSelect} />
+            <MonthGrid
+              month={month}
+              selected={selected}
+              onSelect={onSelect}
+              tasksByDate={tasksByDate}
+            />
           </Paper>
 
           <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-              AUJOURD’HUI
-            </Typography>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: 1 }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                {(() => {
+                  const today = dayjs()
+                  const selectedDate = dayjs(selected)
+                  if (selectedDate.isSame(today, 'day')) return 'AUJOURD’HUI'
+                  if (selectedDate.isSame(today.subtract(1, 'day'), 'day')) return 'HIER'
+                  if (selectedDate.isSame(today.add(1, 'day'), 'day')) return 'DEMAIN'
+                  // Format: vendredi 5 septembre
+                  return selectedDate.locale('fr').format('dddd D MMMM')
+                })()}
+              </Typography>
+              <Fab
+                color="primary"
+                aria-label="add"
+                onClick={() => setAddOpen(true)}
+                size="small"
+                sx={{
+                  ml: 2,
+                  width: { xs: 40, sm: 44 },
+                  height: { xs: 40, sm: 44 },
+                  minHeight: 'unset',
+                  boxShadow: 2,
+                }}
+              >
+                <AddIcon sx={{ fontSize: { xs: 22, sm: 26 } }} />
+              </Fab>
+            </Stack>
 
             {isLoading && (
               <Stack alignItems="center" sx={{ py: 3 }}>
@@ -113,16 +227,22 @@ export default function Page() {
               </Stack>
             )}
             {error && (
-              <Typography color="error" variant="body2">
-                Impossible de charger les tâches.
-              </Typography>
+              <MonthGrid
+                month={month}
+                selected={selected}
+                onSelect={onSelect}
+                tasksByDate={tasksByDate}
+              />
+              //   Impossible de charger les tâches.
+              // </Typography>
             )}
 
             <Stack spacing={1.2}>
-              {!isLoading && Array.isArray(tasks) && tasks?.length > 0
-                ? tasks.map((t) => (
-                    <TaskItem key={t.id} task={t} onChanged={() => load(selected)} />
-                  ))
+              {!isLoading && Array.isArray(tasks) && tasks.length > 0
+                ? tasks
+                    // On affiche toutes les tâches, terminées ou non
+                    .sort((a, b) => Number(a.done) - Number(b.done)) // optionnel : les non terminées d'abord
+                    .map((t) => <TaskItem key={t.id} task={t} onChanged={() => load(selected)} />)
                 : !isLoading &&
                   !error && (
                     <Paper
@@ -144,20 +264,11 @@ export default function Page() {
           </Box>
         </Container>
 
-        <Fab
-          color="primary"
-          aria-label="add"
-          onClick={() => setAddOpen(true)}
-          sx={{ position: 'fixed', bottom: isSmall ? 72 : 32, right: 24 }}
-        >
-          <AddIcon />
-        </Fab>
-
         <AddTaskDialog
           open={addOpen}
           onClose={() => setAddOpen(false)}
           defaultDate={dayjs(selected)}
-          onCreated={(d) => load(d)}
+          onCreated={handleTaskCreated}
         />
 
         {/* Bottom nav placeholder to mimic the mockup */}

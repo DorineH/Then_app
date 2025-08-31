@@ -1,8 +1,27 @@
 'use client'
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react'
-import { Plus, Moon, ChevronRight, Info } from 'lucide-react'
+import {
+  Box,
+  Typography,
+  Button,
+  Grid,
+  Card,
+  CardActionArea,
+  Fab,
+  Stack,
+  Chip,
+} from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import MovieIcon from '@mui/icons-material/Movie'
+import BookIcon from '@mui/icons-material/Book'
+import MusicNoteIcon from '@mui/icons-material/MusicNote'
+import RestaurantIcon from '@mui/icons-material/Restaurant'
+import PlaceIcon from '@mui/icons-material/Place'
+import SportsSoccerIcon from '@mui/icons-material/SportsSoccer'
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import AddFavoritePopup, { Category, NewFavorite } from '@/components/AddFavoritePopup'
 import ServiceFavoris from '@/app/api/services/favoritesService'
 import AddCategoryDialog from '@/components/AddCategoryDialog'
@@ -19,24 +38,45 @@ const FavoritesPage: React.FC = () => {
   >(null)
   const [showDetails, setShowDetails] = useState(false)
 
-  // Palette de couleurs pastel
+  // Palette de couleurs pastel MUI (restaure la logique d'origine)
   const FAVORITE_COLORS = [
-    'bg-pink-100',
-    'bg-purple-100',
-    'bg-blue-100',
-    'bg-green-100',
-    'bg-yellow-100',
-    'bg-orange-100',
-    'bg-teal-100',
-    'bg-red-100',
+    '#FEE3EC', // rose
+    '#E0E7FF', // violet
+    '#C2E2F5', // bleu
+    '#D1FADF', // vert
+    '#FEF9C3', // jaune
+    '#FFE5B4', // orange
+    '#B2F5EA', // teal
+    '#FFD6D6', // rouge pâle
   ]
-
-  // Fonction pour choisir une couleur aléatoire
-  function getRandomColor() {
-    return FAVORITE_COLORS[Math.floor(Math.random() * FAVORITE_COLORS.length)]
+  // Pour garder la même couleur pour chaque catégorie/favori, on utilise un mapping par nom/id
+  const colorMap = React.useRef<{ [key: string]: string }>({})
+  function getColorForKey(key: string) {
+    if (!colorMap.current[key]) {
+      // On prend la prochaine couleur dispo, ou aléatoire si toutes utilisées
+      const used = Object.values(colorMap.current)
+      const available = FAVORITE_COLORS.filter((c) => !used.includes(c))
+      colorMap.current[key] =
+        available.length > 0
+          ? available[0]
+          : FAVORITE_COLORS[Math.floor(Math.random() * FAVORITE_COLORS.length)]
+    }
+    return colorMap.current[key]
   }
 
-  const IconPlaceholder = (props: any) => <span className={props?.className ?? 'w-5 h-5'} />
+  const iconMap: Record<string, React.ElementType> = {
+    favorite: FavoriteIcon,
+    movie: MovieIcon,
+    book: BookIcon,
+    music: MusicNoteIcon,
+    restaurant: RestaurantIcon,
+    place: PlaceIcon,
+    sport: SportsSoccerIcon,
+    trophy: EmojiEventsIcon,
+  }
+  const IconPlaceholder = (props: any) => (
+    <InfoOutlinedIcon sx={{ fontSize: 22, color: '#bdbdbd', ...props?.sx }} />
+  )
 
   // Charger les catégories au chargement
   useEffect(() => {
@@ -44,24 +84,26 @@ const FavoritesPage: React.FC = () => {
       try {
         const res = await ServiceFavoris.getCategories()
         setCategories(
-          res.map((cat: any) => ({
-            id: cat.name,
-            name: cat.name.charAt(0).toUpperCase() + cat.name.slice(1),
-            icon: IconPlaceholder,
-            color: getRandomColor(),
-            // <<<<<<<<< ICI: on passe les définitions du back
-            defs: Array.isArray(cat.fields)
-              ? cat.fields.map((f: any) => ({
-                  name: String(f.name),
-                  label: String(f.label ?? f.name),
-                  required: Boolean(f.required),
-                  // garde un type sûr si jamais la valeur est inattendue
-                  type: (['text', 'url', 'number', 'date'] as const).includes(f.type)
-                    ? f.type
-                    : 'text',
-                }))
-              : [],
-          }))
+          res.map((cat: any) => {
+            const iconKey = cat.icon || 'favorite'
+            const Icon = iconMap[iconKey] || IconPlaceholder
+            return {
+              id: cat.name,
+              name: cat.name.charAt(0).toUpperCase() + cat.name.slice(1),
+              icon: Icon,
+              color: getColorForKey(cat.name),
+              defs: Array.isArray(cat.fields)
+                ? cat.fields.map((f: any) => ({
+                    name: String(f.name),
+                    label: String(f.label ?? f.name),
+                    required: Boolean(f.required),
+                    type: (['text', 'url', 'number', 'date'] as const).includes(f.type)
+                      ? f.type
+                      : 'text',
+                  }))
+                : [],
+            }
+          })
         )
       } catch (error) {
         console.error('Erreur lors de la récupération des catégories:', error)
@@ -85,10 +127,9 @@ const FavoritesPage: React.FC = () => {
           id: fav._id,
           title: fav.itemName || fav.fields?.title || fav.fields?.titre || '',
           subtitle: fav.fields?.description || fav.fields?.desc || '',
-          bgColor: getRandomColor(),
-          // On conserve tous les champs pour l'affichage des détails
+          bgColor: getColorForKey(fav._id),
           fields: fav.fields || {},
-          icon: fav.icon, // si présent côté API
+          icon: fav.icon,
         }))
         setFavorites(mapped)
       } catch (error) {
@@ -101,7 +142,15 @@ const FavoritesPage: React.FC = () => {
   const handleAdd = (newFav: NewFavorite & { fields?: Record<string, any> }) => {
     setFavorites((prev) => [
       ...prev,
-      { ...newFav, fields: (newFav as any)?.fields ?? {}, bgColor: getRandomColor() },
+      {
+        ...newFav,
+        fields: (newFav as any)?.fields ?? {},
+        bgColor: getColorForKey(
+          (typeof newFav.id === 'number' ? newFav.id.toString() : newFav.id) ||
+            newFav.title ||
+            Math.random().toString()
+        ),
+      },
     ])
   }
 
@@ -110,24 +159,26 @@ const FavoritesPage: React.FC = () => {
     try {
       const res = await ServiceFavoris.getCategories()
       setCategories(
-        res.map((cat: any) => ({
-          id: cat.name,
-          name: cat.name.charAt(0).toUpperCase() + cat.name.slice(1),
-          icon: IconPlaceholder,
-          color: getRandomColor(),
-          // <<<<<<<<< ICI: on passe les définitions du back
-          defs: Array.isArray(cat.fields)
-            ? cat.fields.map((f: any) => ({
-                name: String(f.name),
-                label: String(f.label ?? f.name),
-                required: Boolean(f.required),
-                // garde un type sûr si jamais la valeur est inattendue
-                type: (['text', 'url', 'number', 'date'] as const).includes(f.type)
-                  ? f.type
-                  : 'text',
-              }))
-            : [],
-        }))
+        res.map((cat: any) => {
+          const iconKey = cat.icon || 'favorite'
+          const Icon = iconMap[iconKey] || IconPlaceholder
+          return {
+            id: cat.name,
+            name: cat.name.charAt(0).toUpperCase() + cat.name.slice(1),
+            icon: Icon,
+            color: getColorForKey(cat.name),
+            defs: Array.isArray(cat.fields)
+              ? cat.fields.map((f: any) => ({
+                  name: String(f.name),
+                  label: String(f.label ?? f.name),
+                  required: Boolean(f.required),
+                  type: (['text', 'url', 'number', 'date'] as const).includes(f.type)
+                    ? f.type
+                    : 'text',
+                }))
+              : [],
+          }
+        })
       )
     } catch (e) {
       console.error(e)
@@ -135,117 +186,181 @@ const FavoritesPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8 pb-24 md:pb-16">
-      <div className="max-w-7xl mx-auto">
-        {/* Title */}
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 md:mb-8">Favoris</h2>
-
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor: '#f8fafc',
+        p: { xs: 2, md: 4, lg: 6 },
+        pb: { xs: 8, md: 4 },
+      }}
+    >
+      <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
         {/* Categories Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4 gap-3">
-            <h3 className="text-base md:text-lg font-semibold text-gray-700">Catégories</h3>
-            <button
-              className="text-blue-600 font-medium text-sm md:text-base"
+        <Box mb={6}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2} gap={2}>
+            <Typography variant="h6" fontWeight={600} color="text.secondary">
+              Catégories
+            </Typography>
+            <Button
+              variant="text"
+              startIcon={<AddIcon sx={{ color: '#dfa7b9ff' }} />}
               onClick={() => setOpenAddCat(true)}
+              sx={{
+                fontWeight: 500,
+                fontSize: { xs: 14, md: 16 },
+                color: '#dfa7b9ff',
+                textTransform: 'none',
+                '&:hover': {
+                  backgroundColor: 'rgba(223,167,185,0.08)',
+                  color: '#dfa7b9ff',
+                },
+              }}
             >
-              + Ajouter une catégorie
-            </button>
-          </div>
-
-          {/* Grille de catégories responsive */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+              Ajouter une catégorie
+            </Button>
+          </Stack>
+          <Grid container spacing={2}>
             {categories.map((category, idx) => {
               const Icon = category.icon as any
               const selected = selectedCategory?.id === category.id
               return (
-                <button
-                  key={category.id || idx}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`${category.color} rounded-2xl p-3 sm:p-4 flex items-center gap-3 border border-gray-200 hover:shadow-sm transition-shadow min-h-[64px] md:min-h-[72px] ${
-                    selected ? 'ring-2 ring-blue-400' : ''
-                  }`}
-                >
-                  <Icon className="w-5 h-5 text-gray-600" />
-                  <span className="font-medium text-gray-800 truncate">{category.name}</span>
-                </button>
+                <Grid item xs={6} sm={4} md={3} lg={2} key={category.id || idx}>
+                  <Card
+                    onClick={() => setSelectedCategory(category)}
+                    sx={{
+                      bgcolor: category.color,
+                      borderRadius: 3,
+                      p: 1.5,
+                      minHeight: 72,
+                      border: selected ? '2px solid #d0dee9ff' : '1px solid #e0e0e0',
+                      boxShadow: selected ? 3 : 0,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      transition: 'box-shadow 0.2s',
+                    }}
+                  >
+                    <Icon sx={{ fontSize: 22, color: '#a0a0a0ff' }} />
+                    <Typography fontWeight={500} color="text.primary" noWrap>
+                      {category.name}
+                    </Typography>
+                  </Card>
+                </Grid>
               )
             })}
-          </div>
-        </div>
+          </Grid>
+        </Box>
 
         {/* Favorites Section */}
-        <div className="mb-8">
-          <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-4 truncate">
-            {selectedCategory ? `Favoris "${selectedCategory.name}"` : 'Sélectionnez une catégorie'}
-          </h3>
+        <Box mb={6}>
+          <Stack direction="column" alignItems="flex-start" spacing={0} mb={2}>
+            <Typography variant="h6" fontWeight={600} color="text.secondary" noWrap>
+              {selectedCategory
+                ? `Favoris "${selectedCategory.name}"`
+                : 'Sélectionnez une catégorie'}
+            </Typography>
+            <Button
+              variant="text"
+              startIcon={<AddIcon sx={{ color: '#dfa7b9ff' }} />}
+              onClick={() => setShowPopup(true)}
+              sx={{
+                fontWeight: 500,
+                fontSize: { xs: 15, md: 17 },
+                color: '#dfa7b9ff',
+                textTransform: 'none',
+                alignSelf: 'flex-end',
+                '&:hover': {
+                  backgroundColor: 'rgba(223,167,185,0.08)',
+                  color: '#dfa7b9ff',
+                },
+              }}
+            >
+              Ajouter un favoris
+            </Button>
+          </Stack>
 
-          {/* Liste -> grille responsive */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <Grid container spacing={2}>
             {favorites.length === 0 && selectedCategory && (
-              <div className="col-span-full text-gray-400 text-center">
-                Aucun favori pour cette catégorie.
-              </div>
+              <Grid item xs={12}>
+                <Typography color="text.disabled" align="center">
+                  Aucun favori pour cette catégorie.
+                </Typography>
+              </Grid>
             )}
-
             {favorites.map((favorite) => {
               const Icon = (favorite as any).icon as any
               return (
-                <button
-                  key={favorite.id}
-                  onClick={() => {
-                    setSelectedFavorite(favorite)
-                    setShowDetails(true)
-                  }}
-                  aria-label={`Voir les détails de ${favorite.title ?? 'ce favori'}`}
-                  className={`group relative w-full ${favorite.bgColor} rounded-2xl p-4 sm:p-5 flex items-center gap-4 border border-gray-200 hover:shadow-sm hover:ring-2 hover:ring-blue-300 transition-all text-left`}
-                >
-                  <div className="w-12 h-12 bg-white/60 rounded-xl flex items-center justify-center shrink-0">
-                    {Icon ? (
-                      <Icon className="w-6 h-6 text-gray-600" />
-                    ) : (
-                      <Info className="w-6 h-6 text-gray-500" aria-hidden="true" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4
-                      className="font-semibold text-gray-900 flex items-center gap-2 truncate"
-                      title={favorite.title}
+                <Grid item xs={12} sm={6} md={4} key={favorite.id}>
+                  <CardActionArea
+                    onClick={() => {
+                      setSelectedFavorite(favorite)
+                      setShowDetails(true)
+                    }}
+                    sx={{
+                      borderRadius: 3,
+                      bgcolor: favorite.bgColor,
+                      p: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      border: '1px solid #e0e0e0',
+                      boxShadow: 0,
+                      minHeight: 90,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        bgcolor: 'rgba(255,255,255,0.7)',
+                        borderRadius: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mr: 2,
+                      }}
                     >
-                      <span className="truncate text-sm sm:text-base">{favorite.title}</span>
-                      <span className="inline-flex items-center text-xs text-gray-600 bg-white/60 rounded-full px-2 py-0.5 group-hover:bg-white/80 shrink-0">
-                        <Info className="w-3.5 h-3.5" aria-hidden="true" />
-                        <span className="ml-1 hidden sm:inline">Détails</span>
-                      </span>
-                    </h4>
-                    {favorite.subtitle ? (
-                      <p className="text-xs sm:text-sm text-gray-600 mt-0.5 break-words">
-                        {favorite.subtitle}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="ml-2 flex items-center">
-                    <ChevronRight
-                      className="w-5 h-5 text-gray-700 transition-transform group-hover:translate-x-0.5"
-                      aria-hidden="true"
-                    />
-                  </div>
-                </button>
+                      {Icon ? (
+                        <Icon sx={{ fontSize: 28, color: '#90caf9' }} />
+                      ) : (
+                        <InfoOutlinedIcon sx={{ fontSize: 28, color: '#bdbdbd' }} />
+                      )}
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Stack direction="row" alignItems="center" gap={1}>
+                        <Typography fontWeight={600} color="text.primary" noWrap sx={{ flex: 1 }}>
+                          {favorite.title}
+                        </Typography>
+                        {/* <Chip
+                          icon={<InfoOutlinedIcon sx={{ fontSize: 16 }} />}
+                          label="Détails"
+                          size="small"
+                          sx={{
+                            bgcolor: 'white',
+                            color: '#6b7280',
+                            fontWeight: 500,
+                            px: 1,
+                            borderRadius: 1,
+                          }}
+                        /> */}
+                      </Stack>
+                      {favorite.subtitle ? (
+                        <Typography variant="body2" color="text.secondary" mt={0.5} noWrap>
+                          {favorite.subtitle}
+                        </Typography>
+                      ) : null}
+                    </Box>
+                    <ChevronRightIcon sx={{ color: '#757575', ml: 2 }} />
+                  </CardActionArea>
+                </Grid>
               )
             })}
-          </div>
-        </div>
-      </div>
+          </Grid>
+        </Box>
+      </Box>
 
-      {/* Floating Add Button (position ajustée pour mobile & desktop) */}
-      {selectedCategory && (
-        <button
-          onClick={() => setShowPopup(true)}
-          className="fixed bottom-20 right-4 md:bottom-8 md:right-8 w-14 h-14 md:w-16 md:h-16 bg-blue-500 rounded-full flex items-center justify-center shadow-lg"
-          aria-label="Ajouter un favori"
-        >
-          <Plus className="w-6 h-6 md:w-7 md:h-7 text-white" />
-        </button>
-      )}
+      {/* Plus de bouton flottant, le bouton d'ajout est toujours visible sous le titre */}
 
       <AddFavoritePopup
         isOpen={showPopup}
@@ -261,14 +376,13 @@ const FavoritesPage: React.FC = () => {
         addCategory={ServiceFavoris.addCategory}
       />
 
-      {/* Détails du favori sélectionné */}
       <DetailsSheet
         open={showDetails}
         onClose={() => setShowDetails(false)}
         favorite={selectedFavorite}
         category={selectedCategory}
       />
-    </div>
+    </Box>
   )
 }
 

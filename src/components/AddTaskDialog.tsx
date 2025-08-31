@@ -8,18 +8,20 @@ import {
   DialogActions,
   IconButton,
   Stack,
-  Grid,
   TextField,
   MenuItem,
   Button,
   CircularProgress,
+  Typography,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import { DatePicker, TimeField, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { Dayjs } from 'dayjs'
 import ServiceTasks from '@/app/api/services/taskService'
-import { Category } from '@/interfaces/tasks/Tasks'
+import { Category, Task } from '@/interfaces/tasks/Tasks'
+
+import { useEffect } from 'react'
 
 export default function AddTaskDialog({
   open,
@@ -30,7 +32,7 @@ export default function AddTaskDialog({
   open: boolean
   onClose: () => void
   defaultDate: Dayjs
-  onCreated: (dateISO: string) => void
+  onCreated: (dateISO: string, newTask: Task) => void
 }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -39,19 +41,41 @@ export default function AddTaskDialog({
   const [category, setCategory] = useState<Category>('personal')
   const [loading, setLoading] = useState(false)
 
+  // Synchronize date with defaultDate when dialog opens or defaultDate changes
+  useEffect(() => {
+    if (open && defaultDate) {
+      setDate(defaultDate)
+    }
+  }, [open, defaultDate])
+
   const canSubmit = title.trim().length > 0 && !!date
   const submit = async () => {
     if (!canSubmit || !date) return
     setLoading(true)
     try {
-      await ServiceTasks.addTask({
+      const taskResponse = await ServiceTasks.addTask({
         title: title.trim(),
         description: description.trim() || undefined,
         date: date.format('YYYY-MM-DD'),
         time: time ? time.format('HH:mm') : undefined,
         category,
-      } as any)
-      onCreated(date.format('YYYY-MM-DD'))
+        done: false,
+      })
+      // Map TaskResponse to Task
+      const newTask: Task = {
+        id: taskResponse.id,
+        userId: taskResponse.userId,
+        coupleId: taskResponse.coupleId,
+        title: taskResponse.title,
+        description: taskResponse.description,
+        date: taskResponse.date,
+        time: taskResponse.time,
+        category: category,
+        done: taskResponse.done,
+        createdAt: taskResponse.createdAt ? new Date(taskResponse.createdAt) : new Date(),
+        updatedAt: taskResponse.updatedAt ? new Date(taskResponse.updatedAt) : new Date(),
+      }
+      onCreated(date.format('YYYY-MM-DD'), newTask)
       onClose()
       setTitle('')
       setDescription('')
@@ -62,16 +86,31 @@ export default function AddTaskDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      PaperProps={{
+        sx: {
+          // borderRadius: { xs: 4, sm: 5 },
+          m: { xs: 1, sm: 2 },
+          width: { xs: '98vw', sm: 400 },
+          maxWidth: '100vw',
+        },
+      }}
+    >
+      <DialogTitle sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 } }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <span>Nouvelle tâche</span>
+          <Typography variant="h6" sx={{ fontSize: { xs: 18, sm: 22 } }}>
+            Nouvelle tâche
+          </Typography>
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
           </IconButton>
         </Stack>
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 } }}>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             label="Titre"
@@ -79,6 +118,12 @@ export default function AddTaskDialog({
             onChange={(e) => setTitle(e.target.value)}
             fullWidth
             autoFocus
+            size="medium"
+            sx={{
+              fontSize: { xs: 15, sm: 17 },
+              borderRadius: 1,
+              '& .MuiInputBase-root': { borderRadius: 1 },
+            }}
           />
           <TextField
             label="Description"
@@ -87,37 +132,65 @@ export default function AddTaskDialog({
             fullWidth
             multiline
             minRows={2}
+            size="medium"
+            sx={{
+              fontSize: { xs: 15, sm: 17 },
+              borderRadius: 1,
+              '& .MuiInputBase-root': { borderRadius: 1 },
+            }}
           />
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
-                <DatePicker
-                  label="Date"
-                  value={date}
-                  onChange={setDate as any}
-                  slotProps={{ textField: { fullWidth: true } }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
-                <TimeField
-                  label="Heure"
-                  value={time}
-                  onChange={(newValue) => setTime(newValue)}
-                  format="HH:mm"
-                  ampm={false}
-                  fullWidth
-                />
-              </LocalizationProvider>
-            </Grid>
-          </Grid>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
+              <DatePicker
+                label="Date"
+                value={date}
+                onChange={(newValue: Dayjs | null) => setDate(newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'medium',
+                    sx: {
+                      borderRadius: 1,
+                      '& .MuiInputBase-root': { borderRadius: 1 },
+                      p: 0,
+                    },
+                  },
+                }}
+              />
+            </LocalizationProvider>
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
+              <TimeField
+                label="Heure"
+                value={time}
+                onChange={(newValue) => setTime(newValue)}
+                format="HH:mm"
+                ampm={false}
+                fullWidth
+                slotProps={{
+                  textField: {
+                    size: 'medium',
+                    sx: {
+                      borderRadius: 1,
+                      '& .MuiInputBase-root': { borderRadius: 1 },
+                      p: 0,
+                    },
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </Stack>
           <TextField
             select
             label="Catégorie"
             value={category}
             onChange={(e) => setCategory(e.target.value as Category)}
             fullWidth
+            size="medium"
+            sx={{
+              fontSize: { xs: 15, sm: 17 },
+              borderRadius: 1,
+              '& .MuiInputBase-root': { borderRadius: 1 },
+            }}
           >
             <MenuItem value="work">Travail</MenuItem>
             <MenuItem value="personal">Personnel</MenuItem>
@@ -126,11 +199,25 @@ export default function AddTaskDialog({
           </TextField>
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} disabled={loading}>
+      <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 } }}>
+        <Button
+          onClick={onClose}
+          disabled={loading}
+          sx={{ fontWeight: 700, color: 'primary.main' }}
+        >
           Annuler
         </Button>
-        <Button variant="contained" onClick={submit} disabled={!canSubmit || loading}>
+        <Button
+          variant="contained"
+          onClick={submit}
+          disabled={!canSubmit || loading}
+          sx={{
+            borderRadius: 3,
+            minWidth: 120,
+            fontWeight: 700,
+            fontSize: { xs: 15, sm: 17 },
+          }}
+        >
           {loading ? <CircularProgress size={20} /> : 'Ajouter la tâche'}
         </Button>
       </DialogActions>

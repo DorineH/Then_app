@@ -96,7 +96,7 @@ export default function HomePage() {
 
   return (
     <Box
-      sx={{ bgcolor: '#fff', minHeight: '100vh', px: 2, pt: 2, pb: 8, maxWidth: 480, mx: 'auto' }}
+      className="bg-gradient-to-br from-pink-100 to-blue-100"
     >
       <MusicMoment onPlay={() => setMusicDialogOpen(true)} partnerName={partnerName} />
       <QuoteOfTheDay quote={quote} author={author} />
@@ -117,15 +117,31 @@ export default function HomePage() {
         <Box display="flex" flexDirection="column" alignItems="center">
           <strong style={{ textAlign: 'center' }}>Pour le moment {partnerName} ce sent :</strong>
           {otherEmoji ? (
-            <span style={{ fontSize: 40, marginTop: 8, display: 'block', textAlign: 'center' }}>{otherEmoji}</span>
+            <span style={{ fontSize: 40, marginTop: 8, display: 'block', textAlign: 'center' }}>
+              {otherEmoji}
+            </span>
           ) : (
-            <span style={{ fontSize: 16, marginTop: 8, color: '#888', display: 'block', textAlign: 'center' }}>
+            <span
+              style={{
+                fontSize: 16,
+                marginTop: 8,
+                color: '#888',
+                display: 'block',
+                textAlign: 'center',
+              }}
+            >
               (Aucune émotion aujourd&apos;hui)
             </span>
           )}
           <a
             href="/emotions"
-            style={{ fontSize: 12, color: '#C8A1E0', textDecoration: 'none', marginTop: 4, display: 'inline-block' }}
+            style={{
+              fontSize: 12,
+              color: '#C8A1E0',
+              textDecoration: 'none',
+              marginTop: 4,
+              display: 'inline-block',
+            }}
           >
             Allez voir ---&gt;
           </a>

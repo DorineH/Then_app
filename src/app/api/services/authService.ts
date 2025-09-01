@@ -1,4 +1,5 @@
 import { axiosInstance, getToken, setToken } from './http'
+export { axiosInstance } from './http';
 import axios from 'axios'
 
 // Récupérer tous les utilisateurs

@@ -96,7 +96,7 @@ const DashboardCouple = () => {
   }
 
   return (
-    <Box p={{ xs: 1, sm: 2 }} maxWidth="sm" mx="auto" pb={{ xs: 10, sm: 4 }}>
+    <Box className="bg-gradient-to-br from-pink-100 to-blue-100" p={{ xs: 1, sm: 2 }} maxWidth="sm" mx="auto" pb={{ xs: 10, sm: 4 }}>
       {/* Bandeau “en ce moment” */}
       <Box
         display="flex"

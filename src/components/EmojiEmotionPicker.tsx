@@ -148,8 +148,31 @@ export const EmojiEmotionPicker = ({ onSubmit }: Props) => {
             justifyContent: 'center',
           }}
         >
-          <Button onClick={() => setOpen(false)}>Annuler</Button>
-          <Button variant="contained" disabled={!selectedEmoji} onClick={handleSend}>
+          <Button
+            onClick={() => setOpen(false)}
+            sx={{
+              color: '#C8A1E0',
+              fontWeight: 500,
+              '&:hover': { bgcolor: '#b88ad6' },
+              boxShadow: '0 2px 8px rgba(200,161,224,0.10)',
+              textTransform: 'none',
+            }}
+          >
+            Annuler
+          </Button>
+          <Button
+            variant="contained"
+            disabled={!selectedEmoji}
+            onClick={handleSend}
+            sx={{
+              bgcolor: '#C8A1E0',
+              color: '#fff',
+              fontWeight: 500,
+              '&:hover': { bgcolor: '#b88ad6' },
+              boxShadow: '0 2px 8px rgba(200,161,224,0.10)',
+              textTransform: 'none',
+            }}
+          >
             Envoyer
           </Button>
         </DialogActions>

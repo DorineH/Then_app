@@ -55,6 +55,10 @@ export default function LoginPage() {
       </form>
       {success && <div className="mt-4 p-3 bg-green-100 rounded">Connexion réussie !</div>}
       {error && <div className="mt-4 p-3 bg-red-100 rounded text-red-700">{error}</div>}
+      <div className="mt-6 text-center text-sm text-gray-700">
+        Vous n'avez pas de compte ?{' '}
+        <a href="/register" className="text-blue-600 hover:underline">Inscrivez-vous ici</a>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,8 @@
+
 export interface AddApiFavoriteProps {
   category: string
-  title: string
-  description: string
+  title?: string // devient optionnel
+  description?: string
   authorOrArtistOrDirector?: string
   link?: string
   photo?: string

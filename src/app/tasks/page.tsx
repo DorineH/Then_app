@@ -39,9 +39,10 @@ export default function Page() {
   const [tasksByDate, setTasksByDate] = useState<{
     [date: string]: { mine?: boolean; partner?: boolean }
   }>({})
+  const [partnerName, setPartnerName] = useState<string>('Partenaire')
   // const [tasksByDate, setTasksByDate] = useState<TasksByDate>({})
 
-  console.log('Tasks state:', tasks)
+  // ...existing code...
   const [isLoading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   // type TasksByDate = { [date: string]: { mine?: boolean; partner?: boolean } }
@@ -85,12 +86,41 @@ export default function Page() {
       const year = month.year()
       const monthNum = month.month() + 1 // JS: janvier=0, API: janvier=1
       const data = await ServiceTasks.getTasksByMonth(year, monthNum)
+      console.log('[DEBUG] tasksByMonth:', data)
       const userId = getUserId()
+      // Récupérer les users du couple pour trouver le vrai partenaire
+      let partnerId: string | null = null
+      try {
+        const res = await import('../api/services/authService')
+        const { getUsersByCouple } = res
+        const coupleUsers: { id: string; name?: string }[] = await getUsersByCouple()
+        const partner = coupleUsers.find((u) => u.id !== userId)
+        partnerId = partner?.id || null
+        if (partner?.name) setPartnerName(partner.name)
+      } catch (err) {
+        console.log(err)
+        partnerId = null
+      }
       const byDate: { [date: string]: { mine?: boolean; partner?: boolean } } = {}
       data.forEach((task) => {
         if (!byDate[task.date]) byDate[task.date] = {}
         if (userId && task.userId === userId) byDate[task.date].mine = true
-        else byDate[task.date].partner = true
+        // DEBUG: comparer les valeurs et leur type
+        if (partnerId) {
+          console.log(
+            '[DEBUG] task.userId:',
+            task.userId,
+            'partnerId:',
+            partnerId,
+            'equal:',
+            task.userId === partnerId,
+            'typeof task.userId:',
+            typeof task.userId,
+            'typeof partnerId:',
+            typeof partnerId
+          )
+          if (task.userId === partnerId) byDate[task.date].partner = true
+        }
       })
       setTasksByDate(byDate)
     } catch {
@@ -185,6 +215,22 @@ export default function Page() {
               tasksByDate={tasksByDate}
             />
           </Paper>
+
+          {/* Légende calendrier */}
+          <Box display="flex" alignItems="center" gap={2} mt={1} mb={2} justifyContent="center">
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <Box
+                sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ff69b4', mr: 0.5 }}
+              />
+              <Typography variant="caption">Moi</Typography>
+            </Box>
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <Box
+                sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#4caf50', mr: 0.5 }}
+              />
+              <Typography variant="caption">{partnerName}</Typography>
+            </Box>
+          </Box>
 
           <Box sx={{ mt: 2 }}>
             <Stack

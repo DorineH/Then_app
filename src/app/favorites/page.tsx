@@ -1,16 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import {
-  Box,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardActionArea,
-  Fab,
-  Stack,
-  Chip,
-} from '@mui/material'
+import { Box, Typography, Button, Grid, Card, CardActionArea, Stack } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
@@ -22,10 +12,15 @@ import RestaurantIcon from '@mui/icons-material/Restaurant'
 import PlaceIcon from '@mui/icons-material/Place'
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
-import AddFavoritePopup, { Category, NewFavorite } from '@/components/AddFavoritePopup'
+import AddFavoritePopup, {
+  Category,
+  NewFavorite,
+  CategoryFieldDefinition,
+} from '@/components/AddFavoritePopup'
 import ServiceFavoris from '@/app/api/services/favoritesService'
 import AddCategoryDialog from '@/components/AddCategoryDialog'
 import DetailsSheet from '@/components/DetailsSheet'
+import { useAuth } from '../providers/auth-provider'
 
 const FavoritesPage: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false)
@@ -74,43 +69,57 @@ const FavoritesPage: React.FC = () => {
     sport: SportsSoccerIcon,
     trophy: EmojiEventsIcon,
   }
-  const IconPlaceholder = (props: any) => (
+  const IconPlaceholder = (props: { sx?: object }) => (
     <InfoOutlinedIcon sx={{ fontSize: 22, color: '#bdbdbd', ...props?.sx }} />
   )
 
-  // Charger les catégories au chargement
+  // Charger les catégories au chargement, filtrées par coupleId
+  const { user } = useAuth()
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await ServiceFavoris.getCategories()
+        // Filtrer par coupleId si présent dans la catégorie
+        const filtered = user?.coupleId
+          ? res.filter(
+              (cat: { coupleId?: string }) => !cat.coupleId || cat.coupleId === user.coupleId
+            )
+          : res
         setCategories(
-          res.map((cat: any) => {
-            const iconKey = cat.icon || 'favorite'
-            const Icon = iconMap[iconKey] || IconPlaceholder
-            return {
-              id: cat.name,
-              name: cat.name.charAt(0).toUpperCase() + cat.name.slice(1),
-              icon: Icon,
-              color: getColorForKey(cat.name),
-              defs: Array.isArray(cat.fields)
-                ? cat.fields.map((f: any) => ({
-                    name: String(f.name),
-                    label: String(f.label ?? f.name),
-                    required: Boolean(f.required),
-                    type: (['text', 'url', 'number', 'date'] as const).includes(f.type)
-                      ? f.type
-                      : 'text',
-                  }))
-                : [],
+          filtered.map(
+            (cat: {
+              name: string
+              icon?: string
+              fields?: CategoryFieldDefinition[]
+              coupleId?: string
+            }) => {
+              const iconKey = cat.icon || 'favorite'
+              const Icon = iconMap[iconKey] || IconPlaceholder
+              return {
+                id: cat.name,
+                name: cat.name.charAt(0).toUpperCase() + cat.name.slice(1),
+                icon: Icon,
+                color: getColorForKey(cat.name),
+                defs: Array.isArray(cat.fields)
+                  ? cat.fields.map((f: CategoryFieldDefinition) => ({
+                      name: String(f.name),
+                      label: String(f.label ?? f.name),
+                      required: Boolean(f.required),
+                      type: (['text', 'url', 'number', 'date'] as const).includes(f.type)
+                        ? f.type
+                        : 'text',
+                    }))
+                  : [],
+              }
             }
-          })
+          )
         )
       } catch (error) {
         console.error('Erreur lors de la récupération des catégories:', error)
       }
     }
     fetchCategories()
-  }, [])
+  }, [user])
 
   // Charger les favoris de la catégorie sélectionnée
   useEffect(() => {
@@ -123,7 +132,13 @@ const FavoritesPage: React.FC = () => {
     const fetchFavorites = async () => {
       try {
         const res = await ServiceFavoris.getFavoritesByCategory(selectedCategory.id)
-        const mapped = (res || []).map((fav: any) => ({
+        type Favorite = {
+          _id: string
+          itemName?: string
+          fields?: Record<string, unknown>
+          icon?: React.ElementType
+        }
+        const mapped = (res || []).map((fav: Favorite) => ({
           id: fav._id,
           title: fav.itemName || fav.fields?.title || fav.fields?.titre || '',
           subtitle: fav.fields?.description || fav.fields?.desc || '',
@@ -139,12 +154,12 @@ const FavoritesPage: React.FC = () => {
     fetchFavorites()
   }, [selectedCategory])
 
-  const handleAdd = (newFav: NewFavorite & { fields?: Record<string, any> }) => {
+  const handleAdd = (newFav: NewFavorite & { fields?: Record<string, unknown> }) => {
     setFavorites((prev) => [
       ...prev,
       {
         ...newFav,
-        fields: (newFav as any)?.fields ?? {},
+        fields: newFav.fields ?? {},
         bgColor: getColorForKey(
           (typeof newFav.id === 'number' ? newFav.id.toString() : newFav.id) ||
             newFav.title ||
@@ -155,30 +170,42 @@ const FavoritesPage: React.FC = () => {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleCategoryCreated = async (_created: any) => {
+  const handleCategoryCreated = async (_created: unknown) => {
     try {
       const res = await ServiceFavoris.getCategories()
+      const filtered = user?.coupleId
+        ? res.filter(
+            (cat: { coupleId?: string }) => !cat.coupleId || cat.coupleId === user.coupleId
+          )
+        : res
       setCategories(
-        res.map((cat: any) => {
-          const iconKey = cat.icon || 'favorite'
-          const Icon = iconMap[iconKey] || IconPlaceholder
-          return {
-            id: cat.name,
-            name: cat.name.charAt(0).toUpperCase() + cat.name.slice(1),
-            icon: Icon,
-            color: getColorForKey(cat.name),
-            defs: Array.isArray(cat.fields)
-              ? cat.fields.map((f: any) => ({
-                  name: String(f.name),
-                  label: String(f.label ?? f.name),
-                  required: Boolean(f.required),
-                  type: (['text', 'url', 'number', 'date'] as const).includes(f.type)
-                    ? f.type
-                    : 'text',
-                }))
-              : [],
+        filtered.map(
+          (cat: {
+            name: string
+            icon?: string
+            fields?: CategoryFieldDefinition[]
+            coupleId?: string
+          }) => {
+            const iconKey = cat.icon || 'favorite'
+            const Icon = iconMap[iconKey] || IconPlaceholder
+            return {
+              id: cat.name,
+              name: cat.name.charAt(0).toUpperCase() + cat.name.slice(1),
+              icon: Icon,
+              color: getColorForKey(cat.name),
+              defs: Array.isArray(cat.fields)
+                ? cat.fields.map((f: CategoryFieldDefinition) => ({
+                    name: String(f.name),
+                    label: String(f.label ?? f.name),
+                    required: Boolean(f.required),
+                    type: (['text', 'url', 'number', 'date'] as const).includes(f.type)
+                      ? f.type
+                      : 'text',
+                  }))
+                : [],
+            }
           }
-        })
+        )
       )
     } catch (e) {
       console.error(e)

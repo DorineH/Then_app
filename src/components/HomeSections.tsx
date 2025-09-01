@@ -17,11 +17,11 @@ import FormatQuoteIcon from '@mui/icons-material/FormatQuote'
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
 import YouTubeIcon from '@mui/icons-material/YouTube'
 
-export function MusicMoment({ onPlay }: { onPlay: () => void }) {
+export function MusicMoment({ onPlay, partnerName }: { onPlay: () => void; partnerName?: string }) {
   return (
     <Box mb={2}>
       <Typography fontWeight={700} fontSize={18} mb={1}>
-        Musique du moment de Sarah
+        Musique du moment {partnerName ? `de ${partnerName}` : ''}
       </Typography>
       <Card
         sx={{
@@ -93,12 +93,12 @@ const moodEmojiMap: Record<string, string> = {
   sad: '😔',
   veryhappy: '😄',
 }
-export function MoodSection({ mood }: { mood: 'happy' | 'neutral' | 'sad' | 'veryhappy' }) {
+export function MoodSection({ mood, partnerName }: { mood: 'happy' | 'neutral' | 'sad' | 'veryhappy'; partnerName?: string }) {
   const router = useRouter()
   return (
     <Box mb={2}>
       <Typography fontWeight={700} fontSize={18} mb={1}>
-        Aller voir l&apos;humeur de Sarah et Partagez la votre
+        Aller voir l&apos;humeur de {partnerName || 'votre partenaire'} et partagez la vôtre
       </Typography>
       <Box display="flex" justifyContent="center" alignItems="center" mb={1}>
         <Box
@@ -127,40 +127,48 @@ export function MoodSection({ mood }: { mood: 'happy' | 'neutral' | 'sad' | 'ver
 
 export function DayProgram({
   events,
+  partnerName
 }: {
-  events: { color: string; title: string; subtitle: string }[]
+  events: { color: string; title: string; subtitle: string }[];
+  partnerName?: string;
 }) {
   return (
     <Box mb={2}>
       <Typography fontWeight={700} fontSize={18} mb={1}>
-        Programme du jour de Sarah
+        Programme du jour de {partnerName || 'votre partenaire'}
       </Typography>
-      <Stack spacing={1}>
-        {events.map((ev, i) => (
-          <Card
-            key={i}
-            sx={{
-              borderRadius: 3,
-              boxShadow: 0,
-              p: 1.5,
-              border: '1.5px solid #e0e0e0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-            }}
-          >
-            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: ev.color, mr: 1 }} />
-            <Box>
-              <Typography fontWeight={700} fontSize={15}>
-                {ev.title}
-              </Typography>
-              <Typography fontSize={13} color="text.secondary">
-                {ev.subtitle}
-              </Typography>
-            </Box>
-          </Card>
-        ))}
-      </Stack>
+      {events.length === 0 ? (
+        <Typography fontSize={15} color="text.secondary" align="center" sx={{ mt: 2 }}>
+          Rien à faire aujourd&apos;hui
+        </Typography>
+      ) : (
+        <Stack spacing={1}>
+          {events.map((ev, i) => (
+            <Card
+              key={i}
+              sx={{
+                borderRadius: 3,
+                boxShadow: 0,
+                p: 1.5,
+                border: '1.5px solid #e0e0e0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: ev.color, mr: 1 }} />
+              <Box>
+                <Typography fontWeight={700} fontSize={15}>
+                  {ev.title}
+                </Typography>
+                <Typography fontSize={13} color="text.secondary">
+                  {ev.subtitle}
+                </Typography>
+              </Box>
+            </Card>
+          ))}
+        </Stack>
+      )}
     </Box>
   )
 }

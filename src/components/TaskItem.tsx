@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Paper, Stack, Checkbox, Box, Chip, Typography, Tooltip, IconButton } from '@mui/material'
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
+import { Paper, Stack, Checkbox, Box, Chip, Typography, IconButton } from '@mui/material'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import { Category, Task } from '@/interfaces/tasks/Tasks'
@@ -117,13 +116,13 @@ export default function TaskItem({ task, onChanged }: { task: Task; onChanged: (
             </Stack>
           )}
         </Box>
-        <Tooltip title="Notifier (à venir)">
+        {/* <Tooltip title="Notifier (à venir)">
           <span>
             <IconButton size="small" disabled>
               <NotificationsNoneIcon />
             </IconButton>
           </span>
-        </Tooltip>
+        </Tooltip> */}
         <IconButton color="error" onClick={remove} disabled={busy}>
           <DeleteOutlineIcon />
         </IconButton>

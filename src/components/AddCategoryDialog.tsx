@@ -42,6 +42,7 @@ export interface NewCategoryPayload {
   name: string
   icon?: string
   fields: CategoryFieldDefinition[]
+  coupleId?: string
 }
 
 export interface AddCategoryDialogProps {
@@ -78,14 +79,16 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
 
+import { useAuth } from '../app/providers/auth-provider';
 export default function AddCategoryDialog(props: AddCategoryDialogProps) {
-  const { open, onClose, onCreated, addCategory } = props
+  const { open, onClose, onCreated, addCategory } = props;
+  const { user } = useAuth();
 
-  const [name, setName] = React.useState('')
-  const [icon, setIcon] = React.useState<string>('favorite')
-  const [fields, setFields] = React.useState<FieldRow[]>([{ ...emptyField(), required: true }])
-  const [submitting, setSubmitting] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [name, setName] = React.useState('');
+  const [icon, setIcon] = React.useState<string>('favorite');
+  const [fields, setFields] = React.useState<FieldRow[]>([{ ...emptyField(), required: true }]);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   const reset = () => {
     setName('')
@@ -148,14 +151,14 @@ export default function AddCategoryDialog(props: AddCategoryDialogProps) {
             required: !!required,
             type,
           })),
-      }
-      const created = await addCategory(payload)
-      onCreated?.(created)
-      reset()
-      onClose()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        coupleId: user?.coupleId,
+      };
+      const created = await addCategory(payload);
+      onCreated?.(created);
+      reset();
+      onClose();
     } catch (e: any) {
-      setError(e?.message || 'Échec de la création de la catégorie.')
+      setError(e?.message || 'Échec de la création de la catégorie.');
     } finally {
       setSubmitting(false)
     }

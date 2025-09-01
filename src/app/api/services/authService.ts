@@ -1,5 +1,14 @@
+import { axiosInstance, getToken, setToken } from './http'
 import axios from 'axios'
-import { getToken, setToken } from './http'
+
+// Récupérer tous les utilisateurs
+export type UserApi = {
+  id: string
+  coupleId: string
+  name: string
+  email: string
+  age?: number
+}
 
 export type DemoLoginPayload = { userId?: string; coupleId?: string; email?: string }
 export type DemoLoginResponse = {
@@ -7,6 +16,47 @@ export type DemoLoginResponse = {
   userId: string
   coupleId: string
   email: string
+}
+
+// Inscription d'un utilisateur (création ou rejoindre un couple)
+export type RegisterPayload = {
+  name: string
+  email: string
+  age: number
+  coupleId?: string // facultatif pour la première inscription
+}
+
+export type RegisterResponse = {
+  userId: string
+  coupleId: string
+  email: string
+}
+
+// Connexion d'un utilisateur
+export type LoginPayload = {
+  userId: string
+  coupleId: string
+  email: string
+}
+
+export type LoginResponse = {
+  access_token: string
+  userId: string
+  coupleId: string
+  email: string
+}
+
+// import { axiosInstance } from './http'
+
+export async function getUsersByCouple(): Promise<UserApi[]> {
+  const { data } = await axiosInstance.get('/users/by-couple')
+  return data
+}
+
+export async function getUsers(): Promise<UserApi[]> {
+  const { data } = await axiosInstance.get('/users')
+  console.log(data)
+  return data
 }
 
 export async function loginDemo(): Promise<string> {
@@ -25,16 +75,20 @@ export async function ensureToken(): Promise<string> {
   }
   return await loginDemo()
 }
-// export async function bootstrapToken(): Promise<string> {
-//   let token = getToken()
-//   if (!token) {
-//     const { data } = await axiosInstance.post('/auth/demo', {}) // public
-//     token = data?.access_token
-//     if (!token) throw new Error('No token received')
-//     setToken(token)
-//   } else {
-//     // s’assure que l’instance axios a bien l’en-tête
-//     setToken(token)
-//   }
-//   return token
-// }
+
+export async function registerUser(payload: RegisterPayload): Promise<RegisterResponse> {
+  const { data } = await axios.post(
+    (process.env.NEXT_PUBLIC_API_BASE ?? '/api') + '/users',
+    payload
+  )
+  return data
+}
+
+export async function loginUser(payload: LoginPayload): Promise<LoginResponse> {
+  const { data } = await axios.post(
+    (process.env.NEXT_PUBLIC_API_BASE ?? '/api') + '/auth/demo',
+    payload
+  )
+  setToken(data?.access_token)
+  return data
+}

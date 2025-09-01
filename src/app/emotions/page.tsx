@@ -5,7 +5,8 @@ import { Box, Typography, Grid, CircularProgress } from '@mui/material'
 import { EmojiEmotionPicker } from '@/components/EmojiEmotionPicker'
 import { EmotionCard } from '@/components/EmotionCard'
 import ServiceEmotions from '../api/services/emotionService'
-import { ensureToken } from '../api/services/authService'
+import { ensureToken, getUsersByCouple } from '../api/services/authService'
+import { useAuth } from '../providers/auth-provider'
 
 type Emotion = {
   emoji: string
@@ -17,7 +18,9 @@ type Emotion = {
 const DashboardCouple = () => {
   const [emotions, setEmotions] = useState<Emotion[]>([])
   const [lastUserEmotion, setLastUserEmotion] = useState<Emotion | null>(null)
-  console.log('Last user emotion:', lastUserEmotion)
+  const [lastPartnerEmotion, setLastPartnerEmotion] = useState<Emotion | null>(null)
+  const [partnerName, setPartnerName] = useState<string>('Partenaire')
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -29,16 +32,34 @@ const DashboardCouple = () => {
           ServiceEmotions.getCurrentEmotions(),
           ServiceEmotions.getLastEmotionPerUser(),
         ])
-
         if (!mounted) return
-
         setEmotions(current || [])
-
-        // Pour l’instant un seul user dynamique : on prend le premier élément
-        // (quand on aura deux utilisateurs associés à un coupleId, => on choisira via userId du token)
-        setLastUserEmotion((last && last[0]) || null)
+        // last est un tableau d'émotions
+        if (user?.userId && Array.isArray(last)) {
+          setLastUserEmotion(last.find((e) => e.userId === user.userId) || null)
+          // Trouver le partenaire
+          const users = await getUsersByCouple()
+          const partner = users.find((u) => u.id !== user.userId)
+          // const me = users.find((u) => u.id === user.userId)
+          // const partner = users.find(
+          //   (u) => u.coupleId === user.coupleId && u.id !== user.userId && u.email !== user.email
+          // )
+          if (partner) {
+            setPartnerName(partner.name)
+            setLastPartnerEmotion(last.find((e) => e.userId === partner.id) || null)
+          } else {
+            setLastPartnerEmotion(null)
+            setPartnerName('Partenaire')
+          }
+        } else {
+          setLastUserEmotion(null)
+          setLastPartnerEmotion(null)
+        }
       } catch (e) {
         console.error('Erreur load émotions:', e)
+        setLastUserEmotion(null)
+        setLastPartnerEmotion(null)
+        setPartnerName('Partenaire')
       } finally {
         if (mounted) setLoading(false)
       }
@@ -46,7 +67,7 @@ const DashboardCouple = () => {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [user])
 
   const handleSubmitEmotion = async (emoji: string, message?: string) => {
     try {
@@ -98,10 +119,9 @@ const DashboardCouple = () => {
           ❤️
         </Typography>
 
-        {/* partenaire statique pour l’instant */}
         <Box textAlign="center">
-          <Typography fontSize={{ xs: 32, sm: 40 }}>😊</Typography>
-          <Typography fontWeight="bold">Partenaire</Typography>
+          <Typography fontSize={{ xs: 32, sm: 40 }}>{lastPartnerEmotion?.emoji || '�'}</Typography>
+          <Typography fontWeight="bold">{partnerName}</Typography>
         </Box>
       </Box>
 
@@ -122,7 +142,7 @@ const DashboardCouple = () => {
               <EmotionCard
                 emoji={e.emoji}
                 userName={
-                  lastUserEmotion && e.userId === lastUserEmotion.userId ? 'Vous' : 'Partenaire'
+                  lastUserEmotion && e.userId === lastUserEmotion.userId ? 'Vous' : partnerName
                 }
                 optionalMessage={e.optionalMessage}
                 createdAt={e.createdAt}

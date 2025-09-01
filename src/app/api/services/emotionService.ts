@@ -17,8 +17,6 @@ const ServiceEmotions = {
     try {
       const response = await axiosInstance.get<EmotionResponse[]>('/emotion/getEmotions')
 
-      console.log('Emotions fetched:', response.data)
-
       return response.data || []
     } catch (error) {
       console.error('Error fetching categories:', error)
@@ -29,9 +27,6 @@ const ServiceEmotions = {
   async getLastEmotionPerUser(): Promise<{ [userId: string]: EmotionResponse }> {
     try {
       const response = await axiosInstance.get('/emotion/lastEmotionByUser')
-
-      console.log(response.data)
-
       return response.data || {}
     } catch (error) {
       console.error('Error fetching last emotion per user:', error)

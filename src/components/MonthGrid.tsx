@@ -115,6 +115,7 @@ export default function MonthGrid({
                   {indicators?.mine && (
                     <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: '#ff69b4' }} />
                   )}
+                  {/* Always show green dot if partner has a task, even if mine is also true */}
                   {indicators?.partner && (
                     <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: '#4caf50' }} />
                   )}

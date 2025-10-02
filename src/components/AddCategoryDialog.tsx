@@ -251,7 +251,7 @@ export default function AddCategoryDialog(props: AddCategoryDialogProps) {
                       '& .MuiInputBase-root': { borderRadius: 1 },
                     }}
                   />
-                  <TextField
+                  {/* <TextField
                     label="Clé technique"
                     placeholder='ex. "title", "artist", "description"...'
                     value={f.name}
@@ -265,7 +265,7 @@ export default function AddCategoryDialog(props: AddCategoryDialogProps) {
                       borderRadius: 1,
                       '& .MuiInputBase-root': { borderRadius: 1 },
                     }}
-                  />
+                  /> */}
                   <TextField
                     select
                     label="Type"

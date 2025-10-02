@@ -95,13 +95,11 @@ export default function HomePage() {
   }, [user])
 
   return (
-    <Box
-      className="bg-gradient-to-br from-pink-100 to-blue-100"
-    >
+    <Box>
       <MusicMoment onPlay={() => setMusicDialogOpen(true)} partnerName={partnerName} />
       <QuoteOfTheDay quote={quote} author={author} />
       {/* enlever quand se sera fini */}
-      {userName && (
+      {/* {userName && (
         <Box mb={2}>
           <strong>Bienvenue {userName} !</strong>
           {userEmoji ? (
@@ -112,7 +110,7 @@ export default function HomePage() {
             </span>
           )}
         </Box>
-      )}
+      )} */}
       <Box mb={2}>
         <Box display="flex" flexDirection="column" alignItems="center">
           <strong style={{ textAlign: 'center' }}>Pour le moment {partnerName} ce sent :</strong>

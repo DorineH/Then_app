@@ -12,7 +12,11 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   return (
     <>
       {!isAuthPage && <Header />}
-      {children}
+      <div className="bg-[#f5f3ff] min-h-screen w-full">
+        <div className="px-4">
+          {children}
+        </div>
+      </div>
       {!isAuthPage && <ToastProvider />}
       {!isAuthPage && <BottomNavigation />}
     </>

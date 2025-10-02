@@ -202,7 +202,7 @@ export default function Page() {
   return (
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
-        <Container  className="bg-gradient-to-br from-pink-100 to-blue-100" maxWidth="sm" sx={{ pb: { xs: 13, sm: 8 } }}>
+        <Container maxWidth="sm" sx={{ pb: { xs: 13, sm: 8 } }}>
           <Paper
             elevation={0}
             sx={{ mt: 1, p: 1, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}

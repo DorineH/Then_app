@@ -300,7 +300,7 @@ export const AddFavoritePopup: React.FC<AddFavoritePopupProps> = ({
                 sx={{ mb: 2, borderRadius: 1, '& .MuiInputBase-root': { borderRadius: 1 } }}
               />
             ))}
-            <TextField
+            {/* <TextField
               label="Lien (optionnel)"
               type="url"
               placeholder="https://exemple.com"
@@ -319,7 +319,7 @@ export const AddFavoritePopup: React.FC<AddFavoritePopupProps> = ({
             <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
               <LinkIcon sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} /> Ajoute une URL si
               tu veux retrouver ce favori rapidement.
-            </Typography>
+            </Typography> */}
           </Box>
         )}
       </DialogContent>
